@@ -43,7 +43,7 @@ CLI commands are kebab-case; the matching MCP tools are snake_case. Flags are na
 | `status` | `status` | — |
 | `search-products --query TEXT [--page N] [--pageSize N]` | `search_products` | — |
 | `suggest-search-phrases --query TEXT` | `suggest_search_phrases` | — |
-| `get-product (--itemId ID | --barcode CODE)` | `get_product` | — |
+| `get-product (--itemId ID \| --barcode CODE)` | `get_product` | — |
 | `get-product-details --itemId ID` | `get_product_details` | — |
 | `list-categories` | `list_categories` | — |
 | `list-category-products --subCategoryId ID` | `list_category_products` | — |
@@ -59,7 +59,7 @@ CLI commands are kebab-case; the matching MCP tools are snake_case. Flags are na
 | `list-orders [--limit N]` | `list_orders` | — |
 | `get-order-items --orderId ID` | `get_order_items` | — |
 | `copy-order-to-cart --orderId ID` | `copy_order_to_cart` | cart |
-| `change-order-delivery-slot --orderId ID --shipmentId ID (--addressId ID | --storeId ID)` | `change_order_delivery_slot` | order |
+| `change-order-delivery-slot --orderId ID --shipmentId ID (--addressId ID \| --storeId ID)` | `change_order_delivery_slot` | order |
 | `get-substitutions --orderId ID` | `get_substitutions` | — |
 | `answer-substitutions --orderId ID --approve all\|none\|IDS` | `answer_substitutions` | order |
 | `get-cart` | `get_cart` | — |
