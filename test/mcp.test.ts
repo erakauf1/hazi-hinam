@@ -24,6 +24,8 @@ describe("mcp server", () => {
     const prepare = tools.find(t => t.name === "prepare_usual_order")!;
     expect(prepare.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true });
     expect(tools.find(t => t.name === "list_orders")!.annotations).toMatchObject({ readOnlyHint: true });
+    for (const name of ["clear_cart", "set_item_remark", "clear_item_remark", "answer_substitutions"])
+      expect(tools.find(t => t.name === name)!.annotations, name).toMatchObject({ destructiveHint: true });
   });
 
   it("returns operation results as JSON text", async () => {
@@ -40,5 +42,12 @@ describe("mcp server", () => {
     const result = await client.callTool({ name: "get_cart", arguments: {} });
     expect(result.isError).toBe(true);
     expect((result.content as any)[0].text).toMatch(/AUTH_REQUIRED/);
+  });
+
+  it("describes the shopping tools in its instructions", async () => {
+    const client = await connect(createContext({ store: await tempStore(), now: () => now }));
+    const instructions = client.getInstructions() ?? "";
+    expect(instructions).toMatch(/search_products/);
+    expect(instructions).toMatch(/cannot place or pay/i);
   });
 });

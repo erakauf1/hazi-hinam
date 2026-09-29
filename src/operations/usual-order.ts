@@ -45,10 +45,15 @@ export const prepareUsualOrderOp = defineOperation({
       cart: {
         itemsAdded: report.added.length,
         missing: report.missing.map(m => ({ name: m.item.name, reason: m.reason, ...(m.detail ? { detail: m.detail } : {}) })),
+        remapped: report.remapped.length
+          ? report.remapped.map(r => ({ name: r.item.name, oldItemId: r.item.itemId, newItemId: r.newItemId }))
+          : undefined,
         total: describeTotal(report.summary),
       },
       delivery,
-      nextStep: `Open ${SITE_ORIGIN}/, choose the delivery slot, and pay there. This tool never places or pays for orders.`,
+      nextStep:
+        `Open ${SITE_ORIGIN}/, choose the delivery slot, and pay there. This tool never places or pays for orders.` +
+        (report.remapped.length ? " Some products changed id on the site; after checking the cart, run save_usual_order to update the saved list." : ""),
     };
   },
 });

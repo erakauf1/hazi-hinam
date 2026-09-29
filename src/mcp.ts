@@ -10,8 +10,11 @@ const INSTRUCTIONS = [
   "Tools for the user's own Hazi Hinam (Israeli supermarket) online account.",
   "To reorder: call prepare_usual_order with the day the user asked for. It replaces the cart with the saved usual order at exact amounts and lists delivery slots.",
   "A weekday resolves to the next two occurrences; ask the user which date and slot they want.",
-  "Report the total, any missing items, and the available slots.",
-  "You cannot place or pay for orders. The user finishes on the website.",
+  "Report the total, any missing items (suggest alternatives with search_products), and the available slots.",
+  "To find products use search_products (Hebrew works best), then set_cart_item with the itemId. get_product_details answers ingredient, allergen and nutrition questions.",
+  "Placed orders: list_orders shows which can still change their slot (change_order_delivery_slot); get_substitutions/answer_substitutions handle the store's replacement proposals.",
+  "Confirm with the user before any tool that changes the cart, an order, favorites, lists or the default address.",
+  "You cannot place or pay for orders, or change the products of a placed order. The user finishes on the website.",
   "If a tool returns AUTH_REQUIRED, ask the user to run `hazi-hinam login` in a terminal.",
   "If NO_USUAL_ORDER, ask the user to fill the cart on the website with their usual amounts, then call save_usual_order.",
 ].join(" ");

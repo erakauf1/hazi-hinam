@@ -123,3 +123,79 @@ describe("replayUsualOrder", () => {
     await expect(loadUsualOrder(await tempStore())).rejects.toMatchObject({ code: "NO_USUAL_ORDER" });
   });
 });
+
+describe("replayUsualOrder barcode fallback", () => {
+  const usual = {
+    savedAt: "2026-09-01T00:00:00.000Z",
+    items: [
+      { itemId: 1, barcode: "7290000000001", name: "Bread", quantity: 1, type: 1 },
+      { itemId: 2, barcode: "7290000000002", name: "Milk", quantity: 3, type: 1 },
+    ],
+  };
+  const rejectMilk = (call: { body: any }) =>
+    call.body.Object.ItemId === 2
+      ? { json: { IsOK: false, Results: null, ErrorResponse: { ErrorDescription: "retired" } } }
+      : { json: { IsOK: true, Results: null, ErrorResponse: null } };
+
+  it("sets the product's new id when the saved id is rejected", async () => {
+    const store = await tempStore();
+    await store.writeJson(USUAL_ORDER_FILE, usual);
+    const f = fakeFetch({
+      "DELETE item/removeItemsInCart": null,
+      "POST item/addItemToCart": rejectMilk,
+      "GET item/getItemByBarkod/7290000000002": { Item: item(22, { BarKod: "7290000000002" }) },
+      "GET item/getItemsInCart": cartOf(
+        item(1, { Cart: { Quantity: 1, ItemQuantityType: 1 } }),
+        item(22, { Cart: { Quantity: 3, ItemQuantityType: 1 } }),
+      ),
+      "GET order/cartSummary": { CartSummary: summary },
+    });
+    const report = await replayUsualOrder(new HaziHinamClient("t", { fetch: f.fetch }), store);
+    expect(report.remapped).toEqual([{ item: usual.items[1], newItemId: 22 }]);
+    expect(report.added.map(i => i.itemId)).toEqual([1, 2]);
+    expect(report.missing).toEqual([]);
+    const adds = f.calls.filter(c => c.path === "item/addItemToCart").map(c => c.body.Object);
+    expect(adds.at(-1)).toEqual({ ItemId: 22, Quantity: 3, Type: 1, IsCalculateCart: true });
+    expect((await store.readJson<typeof usual>(USUAL_ORDER_FILE))!.items[1].itemId).toBe(2);
+  });
+
+  it("keeps the line as rejected when the barcode finds nothing new", async () => {
+    const store = await tempStore();
+    await store.writeJson(USUAL_ORDER_FILE, usual);
+    const f = fakeFetch({
+      "DELETE item/removeItemsInCart": null,
+      "POST item/addItemToCart": rejectMilk,
+      "GET item/getItemByBarkod/7290000000002": { Item: null },
+      "GET item/getItemsInCart": cartOf(item(1, { Cart: { Quantity: 1, ItemQuantityType: 1 } })),
+      "GET order/cartSummary": { CartSummary: summary },
+    });
+    const report = await replayUsualOrder(new HaziHinamClient("t", { fetch: f.fetch }), store);
+    expect(report.remapped).toEqual([]);
+    expect(report.missing).toMatchObject([{ item: usual.items[1], reason: "rejected" }]);
+  });
+
+  it("keeps the line as rejected when the barcode lookup itself fails", async () => {
+    const store = await tempStore();
+    await store.writeJson(USUAL_ORDER_FILE, usual);
+    const f = fakeFetch({
+      "DELETE item/removeItemsInCart": null,
+      "POST item/addItemToCart": rejectMilk,
+      "GET item/getItemsInCart": cartOf(item(1, { Cart: { Quantity: 1, ItemQuantityType: 1 } })),
+      "GET order/cartSummary": { CartSummary: summary },
+    });
+    const report = await replayUsualOrder(new HaziHinamClient("t", { fetch: f.fetch }), store);
+    expect(report.remapped).toEqual([]);
+    expect(report.missing).toMatchObject([{ reason: "rejected" }]);
+  });
+
+  it("stops on AuthRequired during the barcode lookup", async () => {
+    const store = await tempStore();
+    await store.writeJson(USUAL_ORDER_FILE, usual);
+    const f = fakeFetch({
+      "DELETE item/removeItemsInCart": null,
+      "POST item/addItemToCart": rejectMilk,
+      "GET item/getItemByBarkod/7290000000002": () => ({ status: 401, text: "" }),
+    });
+    await expect(replayUsualOrder(new HaziHinamClient("t", { fetch: f.fetch }), store)).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
+  });
+});

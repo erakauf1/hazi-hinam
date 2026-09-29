@@ -2,8 +2,11 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { vi } from "vitest";
+import { z } from "zod";
 import type { Item } from "../src/api/types.js";
 import { Store } from "../src/store.js";
+import { createContext } from "../src/context.js";
+import { operations } from "../src/operations/index.js";
 
 export interface Call {
   method: string;
@@ -55,3 +58,18 @@ export const item = (id: number, overrides: Partial<Item> = {}): Item => ({
 });
 
 export const tempStore = async () => new Store(join(await mkdtemp(join(tmpdir(), "hh-")), "cfg"));
+
+export const NOW = new Date("2026-09-29T19:00:00Z");
+
+export async function signedIn(routes: Record<string, unknown>, now: Date = NOW) {
+  const store = await tempStore();
+  await store.saveSession("tok", 172800, now);
+  const f = fakeFetch(routes);
+  return { ctx: createContext({ store, fetch: f.fetch, now: () => now }), calls: f.calls, store };
+}
+
+export function runOp(ctx: ReturnType<typeof createContext>, name: string, args: Record<string, unknown> = {}) {
+  const op = operations.find(o => o.name === name);
+  if (!op) throw new Error(`no operation ${name}`);
+  return op.run(ctx, z.object(op.input).parse(args));
+}

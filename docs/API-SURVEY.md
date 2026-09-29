@@ -16,8 +16,9 @@ kept here.
 |---|---|
 | Endpoints in the app | 98 |
 | Probed live (read-only) | 49 |
-| In the current plan (v1) | 9 |
-| Recommended next | 29 |
+| Built in phase 1 (v1) | 9 |
+| Built in phase 2 (v2) | 26 |
+| Recommended next | 3 |
 | Later / nice to have | 34 |
 | Excluded | 26 |
 
@@ -25,7 +26,7 @@ kept here.
 account data) · `message` (sends something to the store) · `auth` (login/SMS/registration) · `payment` ·
 `destructive-account`.
 
-**MCP recommendation:** `v1` built now · `next` phase 2 · `later` if needed · `exclude` never exposed to an
+**MCP recommendation:** `v1` built in phase 1 · `v2` built in phase 2 · `next` still recommended · `later` if needed · `exclude` never exposed to an
 assistant (credentials, CAPTCHA, SMS, account deletion, payment for now, marketing content).
 
 ## Session
@@ -61,31 +62,31 @@ assistant (credentials, CAPTCHA, SMS, account deletion, payment for now, marketi
 | Endpoint | Method | Body | Risk | MCP | Live | Response (top-level) | Notes |
 |---|---|---|---|---|---|---|---|
 | `address/delete` | DELETE |  | account | later | not probed |  | Delete an address. |
-| `Address/get` | GET |  | read | next | 200 | AtleaseOneAddressCoordinatesUnVerified, AtleaseOneAddressCoordinatesUnVerifiedMessage, Addresses | Saved delivery addresses (full address fields). |
+| `Address/get` | GET |  | read | v2 | 200 | AtleaseOneAddressCoordinatesUnVerified, AtleaseOneAddressCoordinatesUnVerifiedMessage, Addresses | Saved delivery addresses (full address fields). |
 | `address/post` | POST | wrapped | account | later | not probed |  | Add an address; body `{UserAddresses:{IsSelfPickUp,IsDefault,Address}}`. |
 | `Address/put` | PUT | wrapped | account | later | not probed |  | Edit an address. |
-| `address/setDefault` | PUT | wrapped | account | next | not probed |  | Choose the default delivery address. |
+| `address/setDefault` | PUT | wrapped | account | v2 | not probed |  | Choose the default delivery address. |
 | `address/validateGooglePlaceId` | POST | wrapped | read | later | not probed |  | Validates a Google Place id. |
 | `distribution/getCities` | GET |  | read | later | 200 | Cities | Cities served. |
-| `distribution/getStores` | GET |  | read | next | 200 | Stores | Pickup stores. |
+| `distribution/getStores` | GET |  | read | v2 | 200 | Stores | Pickup stores. |
 | `distribution/getStreetsByCity` | GET |  | read | later | 200 | Streets | Streets for a city (`?Id=`). |
 
 ## Catalog
 
 | Endpoint | Method | Body | Risk | MCP | Live | Response (top-level) | Notes |
 |---|---|---|---|---|---|---|---|
-| `Catalog/get` | GET |  | read | next | 200 | Campaign, Categories | Category tree plus current campaign. |
-| `item/{id}` | GET |  | read | next | 200 | Item | One product. |
-| `item/getItemByBarkod/{barcode}` | GET |  | read | next | 200 | Item | Look up by barcode; fallback when a saved item id is retired. |
-| `item/GetItemGS1Details/{id}` | GET |  | read | next | 200 | ItemId, Barcode, IngredientSequenceandName, ShortDescription, Remarks, ManufacturerName, ManufacturerAddress, UsageAndSafetyWarnings, … | Ingredients, nutrition, allergens, origin. |
+| `Catalog/get` | GET |  | read | v2 | 200 | Campaign, Categories | Category tree plus current campaign. |
+| `item/{id}` | GET |  | read | v2 | 200 | Item | One product. |
+| `item/getItemByBarkod/{barcode}` | GET |  | read | v2 | 200 | Item | Look up by barcode; fallback when a saved item id is retired. |
+| `item/GetItemGS1Details/{id}` | GET |  | read | v2 | 200 | ItemId, Barcode, IngredientSequenceandName, ShortDescription, Remarks, ManufacturerName, ManufacturerAddress, UsageAndSafetyWarnings, … | Ingredients, nutrition, allergens, origin. |
 | `item/GetItemImages/{id}` | GET |  | read | later | 200 | ItemId, Images, Images360 | Product images. |
 | `Item/GetItemsByCategory` | GET |  | read | next | 200 | SubCategories | Items in a category. |
-| `item/getItemsBySearch` | POST | **unwrapped** | read | next | 200 | Items, Categories, SearchPhrases, SuggestedSearchCategories | Product search. **Unwrapped** body `{Paging:{Page,PageSize},Object:{SearchPhrase,SearchPhrases,ItemGroupping}}`. |
-| `item/getItemsBySubCategory` | GET |  | read | next | 200 | Category, Filters, Sorts | Items in a sub-category; query `Id, SortBy, IsDescending, filter[FILTER_Mivza], filter[FILTER_Manufacturer]`. |
+| `item/getItemsBySearch` | POST | **unwrapped** | read | v2 | 200 | Items, Categories, SearchPhrases, SuggestedSearchCategories | Product search. **Unwrapped** body `{Paging:{Page,PageSize},Object:{SearchPhrase,SearchPhrases,ItemGroupping}}`. |
+| `item/getItemsBySubCategory` | GET |  | read | v2 | 200 | Category, Filters, Sorts | Items in a sub-category; query `Id, SortBy, IsDescending, filter[FILTER_Mivza], filter[FILTER_Manufacturer]`. |
 | `item/GetNewItems` | GET |  | read | later | 200 | NewItems | New products. |
 | `item/GetRegulatedItems` | GET |  | read | later | 200 | array | Price-regulated products. |
 | `item/getSuggestedItems` | GET |  | read | later | 200 | SuggestedItems | Suggestions for this customer. |
-| `item/GetSuggestedSearchPhrases` | GET |  | read | next | 200 | SuggestedSearchPhrases | Autocomplete (`?searchPhrase=`). |
+| `item/GetSuggestedSearchPhrases` | GET |  | read | v2 | 200 | SuggestedSearchPhrases | Autocomplete (`?searchPhrase=`). |
 
 ## Promotions
 
@@ -93,8 +94,8 @@ assistant (credentials, CAPTCHA, SMS, account deletion, payment for now, marketi
 |---|---|---|---|---|---|---|---|
 | `Item/GetCampaignItems` | GET |  | read | later | 200 | Campaign | Current campaign items. |
 | `item/getItemsByTags/{ids}` | GET |  | read | later | 200 | Tags, Id, Name | Items for tag ids (comma-separated). |
-| `item/getItemsInMivza/{id}` | GET |  | read | next | not probed |  | Products in one promotion (mivza). |
-| `item/getItemsPromoted` | GET |  | read | next | 200 | PromotedItems | Promoted products (`?SortBy=`). |
+| `item/getItemsInMivza/{id}` | GET |  | read | v2 | not probed |  | Products in one promotion (mivza). |
+| `item/getItemsPromoted` | GET |  | read | v2 | 200 | PromotedItems | Promoted products (`?SortBy=`). |
 | `tag/get` | GET |  | read | later | 200 | Tags | Tags. |
 | `tag/GetSpecialCategories` | POST | wrapped | read | later | 200 | MainTitle, SpecialCategories | Special categories `{IsPromoted,id}`. |
 
@@ -105,35 +106,35 @@ assistant (credentials, CAPTCHA, SMS, account deletion, payment for now, marketi
 | `Item/AddItemsToCart` | POST | wrapped | cart | later | not probed |  | Add many items by id, default amounts `{ItemIds:[…]}`. |
 | `item/addItemToCart` | POST | wrapped | cart | v1 | not probed |  | Set one line's quantity (absolute; 0 removes). |
 | `Item/AddTagItemsToCart` | POST | **unwrapped** | cart | later | not probed |  | Add a tag's items. **Unwrapped** empty body. |
-| `item/deleteItemRemarks/{id}` | DELETE |  | cart | next | not probed |  | Remove a remark. |
+| `item/deleteItemRemarks/{id}` | DELETE |  | cart | v2 | not probed |  | Remove a remark. |
 | `item/getItemsInCart` | GET |  | read | v1 | 200 | CartItemsCount, CartItems, Sorts | Cart items (query `SortBy, IsDescending`). |
-| `item/getItemsRemarks/{id}` | GET |  | read | next | 200 | ItemRemarks | Per-item remark options (e.g. ripeness, slicing). |
+| `item/getItemsRemarks/{id}` | GET |  | read | v2 | 200 | ItemRemarks | Per-item remark options (e.g. ripeness, slicing). |
 | `item/mergeCartItems/{id}` | PUT | wrapped | cart | later | not probed |  | Merge a guest cart into the account. |
 | `item/removeItemsInCart` | DELETE |  | cart | v1 | not probed |  | Empty the cart. |
-| `item/saveItemRemarks` | POST | wrapped | cart | next | not probed |  | Save a remark `{ItemId,OrderId,FreeRemarkText,MultiRemarkIds,SingleRemarkId}`. |
+| `item/saveItemRemarks` | POST | wrapped | cart | v2 | not probed |  | Save a remark `{ItemId,OrderId,FreeRemarkText,MultiRemarkIds,SingleRemarkId}`. |
 | `order/cartSummary` | GET |  | read | v1 | 200 | CartSummary | Totals, delivery fee, minimum order. |
 
 ## Favorites
 
 | Endpoint | Method | Body | Risk | MCP | Live | Response (top-level) | Notes |
 |---|---|---|---|---|---|---|---|
-| `item/addItemToFavorites` | POST | wrapped | account | next | not probed |  | `{ItemId,Quantity,Type}`. |
-| `item/getItemsFav` | GET |  | read | next | 200 | FavoriteItems | Favorite products. |
-| `item/RemoveItemFromFavorites/{id}` | DELETE |  | account | next | not probed |  | Remove a favorite. |
+| `item/addItemToFavorites` | POST | wrapped | account | v2 | not probed |  | `{ItemId,Quantity,Type}`. |
+| `item/getItemsFav` | GET |  | read | v2 | 200 | FavoriteItems | Favorite products. |
+| `item/RemoveItemFromFavorites/{id}` | DELETE |  | account | v2 | not probed |  | Remove a favorite. |
 
 ## Shopping lists
 
 | Endpoint | Method | Body | Risk | MCP | Live | Response (top-level) | Notes |
 |---|---|---|---|---|---|---|---|
 | `item/addShoppingListItem` | POST | wrapped | account | later | not probed |  | Add an item to a list (query params). |
-| `item/addShoppingListItemsToCart/{id}` | POST | **unwrapped** | cart | next | not probed |  | Add a whole list to the cart. **Unwrapped** empty body. |
-| `item/getItemsByShoppingList/{id}` | GET |  | read | next | 200 | ShoppingListItems | Items in a list. |
+| `item/addShoppingListItemsToCart/{id}` | POST | **unwrapped** | cart | v2 | not probed |  | Add a whole list to the cart. **Unwrapped** empty body. |
+| `item/getItemsByShoppingList/{id}` | GET |  | read | v2 | 200 | ShoppingListItems | Items in a list. |
 | `item/removeShoppingListItem` | DELETE |  | account | later | not probed |  | Remove an item from a list (query params). |
 | `shoppinglist/delete/{id}` | DELETE |  | account | later | not probed |  | Delete a list. |
-| `shoppinglist/get` | GET |  | read | next | 200 | IsFavorites, FavoritesCount, ShoppingList | Saved lists (no quantities). |
+| `shoppinglist/get` | GET |  | read | v2 | 200 | IsFavorites, FavoritesCount, ShoppingList | Saved lists (no quantities). |
 | `shoppinglist/getItemLists/{id}` | GET |  | read | later | 404 | (non-JSON, 0 bytes) | Returned 404 when called with an item id; parameter meaning unconfirmed. |
 | `shoppinglist/getItemListsExistance` | GET |  | read | later | 200 | ShoppingListItemExistance | Which lists contain an item (`?Id=`). |
-| `shoppinglist/post` | POST | wrapped | account | next | not probed |  | Create a list `{Name,OrderId,Order_Draft_Id}` (can seed from an order). |
+| `shoppinglist/post` | POST | wrapped | account | v2 | not probed |  | Create a list `{Name,OrderId,Order_Draft_Id}` (can seed from an order). |
 | `shoppinglist/put/{id}` | PUT | wrapped | account | later | not probed |  | Rename `{Name}`. |
 
 ## Orders
@@ -144,11 +145,11 @@ assistant (credentials, CAPTCHA, SMS, account deletion, payment for now, marketi
 | `order/ActivateDraftOrder` | POST | wrapped | cart | later | not probed |  | Open a placed order for editing (`?Id=`). |
 | `order/addOrderItemsToCart` | POST | wrapped | cart | v1 | tested earlier (writes) |  | Site reorder (default amounts). `/{orderId}` or `?draftOrderId=`. |
 | `order/CancelActiveDraftOrder` | POST | wrapped | cart | later | not probed |  | Cancel editing an open order. |
-| `order/ChangeDraftOrderShipping` | POST | wrapped | cart | next | not probed |  | Change the slot of an editable order `{AddressId,StoreId,ShipmentId}`. |
+| `order/ChangeDraftOrderShipping` | POST | wrapped | cart | v2 | not probed |  | Change the slot of an editable order `{AddressId,StoreId,ShipmentId}`. |
 | `order/DownloadInvoice/{id}` | GET (file) |  | read | next | 404 | (non-JSON, 0 bytes) | Invoice PDF; 404 for the probed id (may need `ComaxId` or a finished order). |
 | `order/history` | GET |  | read | v1 | 200 | Orders | All past orders. |
-| `SSCS/GetOrderSuggestedAlternativeItems/{id}` | GET |  | read | next | 200 (IsOK false) | IsOK, Results, ErrorResponse | Substitutes for missing items; returned an error for a finished order. |
-| `SSCS/SetOrderAlternativeItems` | POST | **unwrapped** | cart | next | not probed |  | Choose substitutes (`?Id=`). **Unwrapped** body. |
+| `SSCS/GetOrderSuggestedAlternativeItems/{id}` | GET |  | read | v2 | 200 (IsOK false) | IsOK, Results, ErrorResponse | Substitutes for missing items; returned an error for a finished order. |
+| `SSCS/SetOrderAlternativeItems` | POST | **unwrapped** | cart | v2 | not probed |  | Choose substitutes (`?Id=`). **Unwrapped** body. |
 
 ## Checkout
 
@@ -193,7 +194,7 @@ assistant (credentials, CAPTCHA, SMS, account deletion, payment for now, marketi
 
 | Endpoint | Method | Body | Risk | MCP | Live | Response (top-level) | Notes |
 |---|---|---|---|---|---|---|---|
-| `Branches` | GET |  | read | next | 200 | StripImageFullPath, Branches | Branches with address, hours per weekday, pickup flag. |
+| `Branches` | GET |  | read | v2 | 200 | StripImageFullPath, Branches | Branches with address, hours per weekday, pickup flag. |
 | `Branches/Branch/{id}` | GET |  | read | later | not probed |  | One branch. |
 
 ## Findings from the survey
@@ -205,4 +206,5 @@ assistant (credentials, CAPTCHA, SMS, account deletion, payment for now, marketi
 - **`order/checkout`** carries the card-iframe URL and the user's personal details; the MCP should not expose it raw.
 - **Shopping lists can be seeded from an order** (`shoppinglist/post {Name, OrderId}`), but still without quantities.
 - `shoppinglist/getItemLists/{id}` returned 404 and `order/DownloadInvoice/{id}` returned 404 for the ids tried; both need a follow-up.
+- **Deferred from phase 2:** `LogOut` lives under `/proxy/`, outside the client's allowed base path; `Item/GetItemsByCategory` is covered by sub-category browsing (`item/getItemsBySubCategory`); `order/DownloadInvoice/{id}` returned 404 in the survey and is a file download.
 - The site's API name has typos that must be kept as-is: `getItemByBarkod`, `SetUserNotificatioRead`, `ItemGroupping`, `ShippmentId` (in `order/post`), `getItemListsExistance`.

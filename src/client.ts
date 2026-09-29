@@ -22,6 +22,11 @@ export interface ClientOptions {
   timeoutMs?: number;
 }
 
+export interface PostOptions {
+  wrap?: boolean;
+  query?: Record<string, string | number>;
+}
+
 export class HaziHinamClient {
   private readonly fetchFn: typeof fetch;
   private readonly timeoutMs: number;
@@ -35,9 +40,15 @@ export class HaziHinamClient {
     return this.request<T>("GET", path, undefined, query);
   }
 
-  // The site's ApiService wraps every POST/PUT body this way; a bare body is answered with HTTP 500.
-  post<T>(path: string, payload: unknown = {}): Promise<T> {
-    return this.request<T>("POST", path, { Object: payload });
+  // The site's ApiService wraps POST/PUT bodies as {Object}; a bare body where it expects a wrapped one is answered
+  // with HTTP 500. A few calls opt out (search, list-to-cart, substitutions) and send their own top-level body.
+  post<T>(path: string, payload: unknown = {}, options: PostOptions = {}): Promise<T> {
+    const body = options.wrap === false ? payload : { Object: payload };
+    return this.request<T>("POST", path, body, options.query);
+  }
+
+  put<T>(path: string, payload: unknown = {}): Promise<T> {
+    return this.request<T>("PUT", path, { Object: payload });
   }
 
   delete<T>(path: string): Promise<T> {

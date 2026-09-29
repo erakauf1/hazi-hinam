@@ -69,6 +69,7 @@ describe("usual order operations", () => {
     expect(result.cart).toEqual({ itemsAdded: 1, missing: [], total: expect.objectContaining({ total: 65.9 }) });
     expect(result.delivery.dates).toEqual(["2026-10-01", "2026-10-08"]);
     expect(result.nextStep).toMatch(/shop\.hazi-hinam\.co\.il/);
+    expect(result.cart.remapped).toBeUndefined();
     expect(calls.some(c => c.path.startsWith("order/post"))).toBe(false);
   });
   it("prepare_usual_order rejects a bad day before touching the cart", async () => {
@@ -87,5 +88,31 @@ describe("usual order operations", () => {
     });
     await store.writeJson(USUAL_ORDER_FILE, { savedAt: "x", items: [{ itemId: 1, barcode: "b", name: "Milk", quantity: 2, type: 1 }] });
     expect(((await run("prepare_usual_order", ctx)) as any).delivery).toBeNull();
+  });
+
+  it("prepare_usual_order reports products whose id changed and suggests re-saving", async () => {
+    const { ctx, store } = await signedIn({
+      "DELETE item/removeItemsInCart": null,
+      "POST item/addItemToCart": (call: { body: any }) =>
+        call.body.Object.ItemId === 2
+          ? { json: { IsOK: false, Results: null, ErrorResponse: { ErrorDescription: "retired" } } }
+          : { json: { IsOK: true, Results: null, ErrorResponse: null } },
+      "GET item/getItemByBarkod/b2": { Item: item(22, { BarKod: "b2" }) },
+      "GET item/getItemsInCart": { CartItems: { Categories: [{ Id: 1, Name: "c", Items: [
+        item(1, { Cart: { Quantity: 1, ItemQuantityType: 1 } }),
+        item(22, { Cart: { Quantity: 3, ItemQuantityType: 1 } }),
+      ] }] } },
+      "GET order/cartSummary": { CartSummary: summary },
+    });
+    await store.writeJson(USUAL_ORDER_FILE, { savedAt: "x", items: [
+      { itemId: 1, barcode: "b1", name: "Bread", quantity: 1, type: 1 },
+      { itemId: 2, barcode: "b2", name: "Milk", quantity: 3, type: 1 },
+    ] });
+
+    const result = (await run("prepare_usual_order", ctx)) as any;
+
+    expect(result.cart.remapped).toEqual([{ name: "Milk", oldItemId: 2, newItemId: 22 }]);
+    expect(result.cart.missing).toEqual([]);
+    expect(result.nextStep).toMatch(/save_usual_order/);
   });
 });

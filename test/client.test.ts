@@ -98,3 +98,34 @@ describe("HaziHinamClient", () => {
     expect(f.calls).toHaveLength(1);
   });
 });
+
+describe("HaziHinamClient POST options and PUT", () => {
+  it("sends an unwrapped body when wrap is false", async () => {
+    const f = fakeFetch({ "POST item/getItemsBySearch": { Items: [] } });
+    const body = { Paging: { Page: 1, PageSize: 20 }, Object: { SearchPhrase: "milk" } };
+    await new HaziHinamClient("t", { fetch: f.fetch }).post("item/getItemsBySearch", body, { wrap: false });
+    expect(f.calls[0].body).toEqual(body);
+  });
+
+  it("adds query parameters to a POST", async () => {
+    const f = fakeFetch({ "POST order/ChangeDraftOrderShipping/": null });
+    await new HaziHinamClient("t", { fetch: f.fetch }).post("order/ChangeDraftOrderShipping/", { ShipmentId: 3 }, { query: { Id: 77 } });
+    expect(f.calls[0].url.searchParams.get("Id")).toBe("77");
+    expect(f.calls[0].body).toEqual({ Object: { ShipmentId: 3 } });
+  });
+
+  it("wraps PUT bodies, including an empty one", async () => {
+    const f = fakeFetch({ "PUT address/setDefault/4": null });
+    await new HaziHinamClient("t", { fetch: f.fetch }).put("address/setDefault/4");
+    expect(f.calls[0].method).toBe("PUT");
+    expect(f.calls[0].body).toEqual({ Object: {} });
+  });
+
+  it("still refuses payment paths for unwrapped POST and PUT", async () => {
+    const f = fakeFetch({});
+    const c = new HaziHinamClient("t", { fetch: f.fetch });
+    await expect(c.post("order/post", {}, { wrap: false })).rejects.toBeInstanceOf(ForbiddenOperation);
+    await expect(c.put("user/cc")).rejects.toBeInstanceOf(ForbiddenOperation);
+    expect(f.calls).toHaveLength(0);
+  });
+});
