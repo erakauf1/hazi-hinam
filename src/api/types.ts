@@ -19,6 +19,9 @@ export interface OrderSummary {
   IsDraftOrder: boolean;
   ShippingTypeDesc: string;
   Shipment: Shipment | null;
+  Order_Draft_Id?: number | null;
+  Order_Draft_Due_Date?: string | null;
+  IsOrderShippingChangeAllowed?: boolean;
 }
 
 export interface CartLine {

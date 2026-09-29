@@ -16,3 +16,18 @@ export async function getOrderItems(c: HaziHinamClient, orderId: number): Promis
 export async function copyOrderToCart(c: HaziHinamClient, orderId: number): Promise<void> {
   await c.post(`order/addOrderItemsToCart/${orderId}`);
 }
+
+export interface ShippingTarget {
+  shipmentId: number;
+  addressId: number | null;
+  storeId: number | null;
+}
+
+// Moves a placed order to another slot. The site keys this by the order's draft id, not its order id.
+export async function changeOrderShipping(c: HaziHinamClient, draftId: number, target: ShippingTarget): Promise<void> {
+  await c.post(
+    "order/ChangeDraftOrderShipping/",
+    { AddressId: target.addressId, StoreId: target.storeId, ShipmentId: target.shipmentId },
+    { query: { Id: draftId } },
+  );
+}

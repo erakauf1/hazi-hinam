@@ -8,7 +8,7 @@ import { getProductDetailsOp, getProductOp, searchProductsOp, suggestSearchPhras
 import type { Operation } from "./define.js";
 import { listDeliverySlotsOp } from "./delivery.js";
 import { listAddressesOp, listBranchesOp, listPickupStoresOp, setDefaultAddressOp } from "./places.js";
-import { copyOrderToCartOp, getOrderItemsOp, listOrdersOp } from "./orders.js";
+import { answerSubstitutionsOp, changeOrderDeliverySlotOp, copyOrderToCartOp, getOrderItemsOp, getSubstitutionsOp, listOrdersOp } from "./orders.js";
 import { clearItemRemarkOp, getItemRemarkOptionsOp, setItemRemarkOp } from "./remarks.js";
 import { prepareUsualOrderOp, saveUsualOrderOp, showUsualOrderOp } from "./usual-order.js";
 
@@ -35,6 +35,9 @@ export const operations: Operation[] = [
   listOrdersOp,
   getOrderItemsOp,
   copyOrderToCartOp,
+  changeOrderDeliverySlotOp,
+  getSubstitutionsOp,
+  answerSubstitutionsOp,
   getCartOp,
   setCartItemOp,
   clearCartOp,
