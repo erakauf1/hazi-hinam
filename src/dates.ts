@@ -33,7 +33,7 @@ export function resolveDay(input: string, now: Date): string[] {
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return [text];
   if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(text)) return [parseSiteDate(text)];
 
-  const weekday = WEEKDAYS[text];
+  const weekday = Object.hasOwn(WEEKDAYS, text) ? WEEKDAYS[text] : undefined;
   if (weekday === undefined) {
     throw new HaziHinamError("BAD_DATE", `Unrecognized day "${input}". Use a weekday name or a date like 2026-10-08.`);
   }

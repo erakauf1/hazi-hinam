@@ -50,7 +50,14 @@ export class HaziHinamClient {
       throw new HaziHinamError("BAD_PATH", `Refusing to call ${rawPath}: not a path under ${API_BASE}`);
     }
     const path = url.pathname.slice("/proxy/api/".length);
-    if (FORBIDDEN_PATHS.some(pattern => pattern.test(path))) throw new ForbiddenOperation(path);
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(path);
+    } catch {
+      throw new HaziHinamError("BAD_PATH", `Refusing to call ${rawPath}: malformed percent-encoding`);
+    }
+    // Test the decoded form too: the server may decode escapes like %70 or %2F before routing.
+    if (FORBIDDEN_PATHS.some(pattern => pattern.test(path) || pattern.test(decoded))) throw new ForbiddenOperation(path);
     for (const [key, value] of Object.entries(query)) url.searchParams.set(key, String(value));
     const headers: Record<string, string> = {
       Accept: "application/json",

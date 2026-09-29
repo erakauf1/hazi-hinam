@@ -57,6 +57,7 @@ export async function replayUsualOrder(c: HaziHinamClient, store: Store): Promis
   await clearCart(c);
 
   const rejected = new Map<number, string>();
+  let lastAccepted: UsualItem | undefined;
   for (const [index, line] of usual.items.entries()) {
     try {
       await setItemQuantity(c, {
@@ -65,10 +66,16 @@ export async function replayUsualOrder(c: HaziHinamClient, store: Store): Promis
         type: line.type,
         recalculate: index === usual.items.length - 1,
       });
+      lastAccepted = line;
     } catch (error) {
       if (error instanceof AuthRequired) throw error;
       rejected.set(line.itemId, (error as Error).message);
     }
+  }
+
+  // The recalculation flag rides on the final line; if that line failed, carry it on a line that worked.
+  if (lastAccepted && rejected.has(usual.items[usual.items.length - 1].itemId)) {
+    await setItemQuantity(c, { itemId: lastAccepted.itemId, quantity: lastAccepted.quantity, type: lastAccepted.type, recalculate: true });
   }
 
   const cart = new Map((await getCart(c)).map(i => [i.Id, i]));

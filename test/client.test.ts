@@ -85,4 +85,16 @@ describe("HaziHinamClient", () => {
     expect(results).toEqual({ Removed: true });
     expect(f.calls[0].method).toBe("DELETE");
   });
+
+  it.each(["order/%70ost", "order%2Fpost", "user/%63c", "order/%E0%A4%A"])("refuses %s without calling the network", async path => {
+    const f = fakeFetch({});
+    await expect(new HaziHinamClient("t", { fetch: f.fetch }).post(path)).rejects.toBeInstanceOf(HaziHinamError);
+    expect(f.calls).toHaveLength(0);
+  });
+
+  it("still allows an ordinary path", async () => {
+    const f = fakeFetch({ "GET item/getItemsInCart": {} });
+    await new HaziHinamClient("t", { fetch: f.fetch }).get("item/getItemsInCart");
+    expect(f.calls).toHaveLength(1);
+  });
 });

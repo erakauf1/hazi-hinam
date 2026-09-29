@@ -29,4 +29,8 @@ describe("dates", () => {
   it("rejects unknown input", () => {
     expect(() => resolveDay("someday", now)).toThrow(/Unrecognized day/);
   });
+
+  it.each(["constructor", "toString"])("rejects the inherited property name %s", name => {
+    expect(() => resolveDay(name, now)).toThrow(expect.objectContaining({ code: "BAD_DATE" }));
+  });
 });

@@ -62,6 +62,7 @@ describe("replayUsualOrder", () => {
       { ItemId: 1, Quantity: 3, Type: 1, IsCalculateCart: false },
       { ItemId: 2, Quantity: 1.5, Type: 2, IsCalculateCart: false },
       { ItemId: 3, Quantity: 1, Type: 1, IsCalculateCart: true },
+      { ItemId: 2, Quantity: 1.5, Type: 2, IsCalculateCart: true },
     ]);
     expect(report.added.map(i => i.itemId)).toEqual([1]);
     expect(report.missing).toEqual([
@@ -69,6 +70,43 @@ describe("replayUsualOrder", () => {
       { item: expect.objectContaining({ itemId: 3 }), reason: "rejected", detail: expect.stringContaining("Item not available") },
     ]);
     expect(report.summary).toEqual(summary);
+  });
+
+  it("re-sends the last accepted line with recalculation when the final line is rejected", async () => {
+    const store = await tempStore();
+    await store.writeJson(USUAL_ORDER_FILE, {
+      savedAt: "x",
+      items: [
+        { itemId: 1, barcode: "b1", name: "A", quantity: 2, type: 1 },
+        { itemId: 2, barcode: "b2", name: "B", quantity: 1, type: 1 },
+      ],
+    });
+    const f = fakeFetch({
+      "DELETE item/removeItemsInCart": null,
+      "POST item/addItemToCart": (call: { body: any }) =>
+        call.body.Object.ItemId === 2
+          ? { json: { IsOK: false, Results: null, ErrorResponse: { ErrorDescription: "nope" } } }
+          : { json: { IsOK: true, Results: null, ErrorResponse: null } },
+      "GET item/getItemsInCart": cartOf(item(1, { Cart: { Quantity: 2, ItemQuantityType: 1 } })),
+      "GET order/cartSummary": { CartSummary: summary },
+    });
+    const report = await replayUsualOrder(new HaziHinamClient("t", { fetch: f.fetch }), store);
+    const sets = f.calls.filter(c => c.path === "item/addItemToCart").map(c => c.body.Object);
+    expect(sets.at(-1)).toEqual({ ItemId: 1, Quantity: 2, Type: 1, IsCalculateCart: true });
+    expect(report.missing).toEqual([{ item: expect.objectContaining({ itemId: 2 }), reason: "rejected", detail: expect.stringContaining("nope") }]);
+  });
+
+  it("does not send a recalculation when every line was rejected", async () => {
+    const store = await tempStore();
+    await store.writeJson(USUAL_ORDER_FILE, { savedAt: "x", items: [{ itemId: 1, barcode: "b", name: "n", quantity: 1, type: 1 }] });
+    const f = fakeFetch({
+      "DELETE item/removeItemsInCart": null,
+      "POST item/addItemToCart": () => ({ json: { IsOK: false, Results: null, ErrorResponse: { ErrorDescription: "no" } } }),
+      "GET item/getItemsInCart": cartOf(),
+      "GET order/cartSummary": { CartSummary: summary },
+    });
+    await replayUsualOrder(new HaziHinamClient("t", { fetch: f.fetch }), store);
+    expect(f.calls.filter(c => c.path === "item/addItemToCart")).toHaveLength(1);
   });
 
   it("stops on AuthRequired instead of reporting every item as rejected", async () => {
