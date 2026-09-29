@@ -61,13 +61,13 @@ CLI commands are kebab-case; the matching MCP tools are snake_case. Flags are na
 | `copy-order-to-cart --orderId ID` | `copy_order_to_cart` | cart |
 | `change-order-delivery-slot --orderId ID --shipmentId ID (--addressId ID \| --storeId ID)` | `change_order_delivery_slot` | order |
 | `get-substitutions --orderId ID` | `get_substitutions` | — |
-| `answer-substitutions --orderId ID --approve all\|none\|IDS` | `answer_substitutions` | order |
+| `answer-substitutions --orderId ID --approve all\|none\|IDS` | `answer_substitutions` | order (destructive) |
 | `get-cart` | `get_cart` | — |
 | `set-cart-item --itemId ID --quantity N [--unit unit\|kg]` | `set_cart_item` | cart |
-| `clear-cart` | `clear_cart` | cart |
+| `clear-cart` | `clear_cart` | cart (destructive) |
 | `get-item-remark-options --itemId ID` | `get_item_remark_options` | — |
-| `set-item-remark --itemId ID [--optionIds IDS] [--text TEXT]` | `set_item_remark` | cart |
-| `clear-item-remark --itemId ID` | `clear_item_remark` | cart |
+| `set-item-remark --itemId ID [--optionIds IDS] [--text TEXT]` | `set_item_remark` | cart (destructive) |
+| `clear-item-remark --itemId ID` | `clear_item_remark` | cart (destructive) |
 | `list-delivery-slots [--day thursday]` | `list_delivery_slots` | — |
 | `list-addresses` | `list_addresses` | — |
 | `set-default-address --addressId ID` | `set_default_address` | account |
@@ -75,7 +75,7 @@ CLI commands are kebab-case; the matching MCP tools are snake_case. Flags are na
 | `list-branches` | `list_branches` | — |
 | `save-usual-order` | `save_usual_order` | local file |
 | `show-usual-order` | `show_usual_order` | — |
-| `prepare-usual-order [--day thursday]` | `prepare_usual_order` | cart |
+| `prepare-usual-order [--day thursday]` | `prepare_usual_order` | cart (destructive) |
 
 List-valued flags are comma-separated (`--optionIds 5,6`, `--approve 3,7`).
 

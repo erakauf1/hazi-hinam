@@ -24,6 +24,8 @@ describe("mcp server", () => {
     const prepare = tools.find(t => t.name === "prepare_usual_order")!;
     expect(prepare.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true });
     expect(tools.find(t => t.name === "list_orders")!.annotations).toMatchObject({ readOnlyHint: true });
+    for (const name of ["clear_cart", "set_item_remark", "clear_item_remark", "answer_substitutions"])
+      expect(tools.find(t => t.name === name)!.annotations, name).toMatchObject({ destructiveHint: true });
   });
 
   it("returns operation results as JSON text", async () => {

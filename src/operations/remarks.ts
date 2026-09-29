@@ -34,6 +34,7 @@ export const setItemRemarkOp = defineOperation({
     text: z.string().trim().min(1).max(200).optional(),
   },
   readOnly: false,
+  destructive: true,
   async run(ctx, { itemId, optionIds, text }) {
     const client = await ctx.client();
     const r = await getItemRemarks(client, itemId);
@@ -60,6 +61,7 @@ export const clearItemRemarkOp = defineOperation({
   description: "Remove the picking instructions from a product in the cart.",
   input: { itemId: z.coerce.number().int().positive() },
   readOnly: false,
+  destructive: true,
   async run(ctx, { itemId }) {
     await deleteItemRemarks(await ctx.client(), itemId);
     return { itemId, cleared: true };

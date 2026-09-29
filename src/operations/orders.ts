@@ -94,6 +94,7 @@ export const answerSubstitutionsOp = defineOperation({
   description: "Answer the store's substitute proposals for an order. approve is 'all', 'none', or comma-separated original itemIds to accept; every other proposal is declined. Confirm the choices with the user first.",
   input: { orderId: substitutionId, approve: z.string().regex(/^(all|none|\d+(,\d+)*)$/) },
   readOnly: false,
+  destructive: true,
   async run(ctx, { orderId, approve }) {
     const client = await ctx.client();
     const pairs = await getSuggestedSubstitutes(client, orderId);
