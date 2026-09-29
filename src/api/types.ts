@@ -26,6 +26,20 @@ export interface CartLine {
   ItemQuantityType: number; // 1 = unit, 2 = kg
 }
 
+export interface Promotion {
+  MivzaId: number;
+  MivzaDesc: string;
+  MivzaText: string;
+}
+
+export interface UnitOption {
+  Type: number; // 1 = unit, 2 = kg
+  Interval: number;
+  ItemUnitTypeDesc: string;
+  MaxQuantity: number;
+}
+
+// Catalog fields are optional: the cart and order endpoints return the same record, and tests build minimal ones.
 export interface Item {
   Id: number;
   BarKod: string;
@@ -33,6 +47,16 @@ export interface Item {
   IsInStock: boolean;
   Price_NET: number;
   Cart: CartLine | null;
+  ManufacturerName?: string | null;
+  CategoryName?: string | null;
+  SubCategoryName?: string | null;
+  UnitSizeDesc?: string | null;
+  PricePerUnitDesc?: string | null;
+  Price_Regular?: number | null;
+  IsFavorites?: boolean;
+  IsRemarks?: boolean;
+  Mivza?: Promotion | null;
+  ItemQuantityTypes?: { ConversionRate: number; Types: UnitOption[] | null } | null;
 }
 
 export interface Category {
