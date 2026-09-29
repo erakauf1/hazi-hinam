@@ -12,7 +12,7 @@ export interface Io {
 }
 
 const LOGIN_LIFETIME_SECONDS = 172800;
-// Computed specifier: ./mcp.js and ./browser-login.js are added by later tasks; drop this once both exist.
+// Computed specifier: ./browser-login.js is added by a later task; drop this once it exists.
 const lazyImport = <T>(specifier: string): Promise<T> => import(specifier);
 const commandName = (operationName: string) => operationName.replaceAll("_", "-");
 
@@ -88,7 +88,7 @@ export async function main(argv: string[], io: Io, ctx: Context): Promise<number
       return 0;
     }
     if (command === "mcp") {
-      const { runMcpServer } = await lazyImport<{ runMcpServer(ctx: Context): Promise<void> }>("./mcp.js");
+      const { runMcpServer } = await import("./mcp.js");
       await runMcpServer(ctx);
       return 0;
     }
