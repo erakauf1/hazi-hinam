@@ -1,4 +1,4 @@
-import { AuthRequired, ForbiddenOperation, UpstreamError } from "./errors.js";
+import { AuthRequired, ForbiddenOperation, HaziHinamError, UpstreamError } from "./errors.js";
 
 export const SITE_ORIGIN = "https://shop.hazi-hinam.co.il";
 export const API_BASE = `${SITE_ORIGIN}/proxy/api/`;
@@ -45,10 +45,12 @@ export class HaziHinamClient {
   }
 
   private async request<T>(method: string, rawPath: string, body?: unknown, query: Record<string, string | number> = {}): Promise<T> {
-    const path = rawPath.replace(/^\/+/, "");
+    const url = new URL(rawPath.replace(/^\/+/, ""), API_BASE);
+    if (url.origin !== SITE_ORIGIN || !url.pathname.startsWith("/proxy/api/")) {
+      throw new HaziHinamError("BAD_PATH", `Refusing to call ${rawPath}: not a path under ${API_BASE}`);
+    }
+    const path = url.pathname.slice("/proxy/api/".length);
     if (FORBIDDEN_PATHS.some(pattern => pattern.test(path))) throw new ForbiddenOperation(path);
-
-    const url = new URL(path, API_BASE);
     for (const [key, value] of Object.entries(query)) url.searchParams.set(key, String(value));
     const headers: Record<string, string> = {
       Accept: "application/json",
@@ -71,14 +73,22 @@ export class HaziHinamClient {
     }
 
     if (response.status === 401) throw new AuthRequired();
-    const text = await response.text();
+    let text: string;
+    try {
+      text = await response.text();
+    } catch (error) {
+      throw new UpstreamError(`${method} ${path} response could not be read: ${(error as Error).message}`, response.status);
+    }
     if (!response.ok) throw new UpstreamError(`${method} ${path} failed with HTTP ${response.status}`, response.status);
 
-    let envelope: Envelope<T>;
+    let envelope: Envelope<T> | null;
     try {
-      envelope = JSON.parse(text) as Envelope<T>;
+      envelope = JSON.parse(text) as Envelope<T> | null;
     } catch {
       throw new UpstreamError(`${method} ${path} returned a non-JSON response`, response.status);
+    }
+    if (typeof envelope !== "object" || envelope === null) {
+      throw new UpstreamError(`${method} ${path} returned an unexpected response`, response.status);
     }
     if (!envelope.IsOK) {
       throw new UpstreamError(`${method} ${path} was rejected: ${envelope.ErrorResponse?.ErrorDescription ?? "no reason given"}`, response.status);

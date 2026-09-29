@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { HaziHinamClient } from "../src/client.js";
-import { AuthRequired, ForbiddenOperation, UpstreamError } from "../src/errors.js";
+import { AuthRequired, ForbiddenOperation, HaziHinamError, UpstreamError } from "../src/errors.js";
 import { fakeFetch } from "./helpers.js";
 
 describe("HaziHinamClient", () => {
@@ -60,4 +60,29 @@ describe("HaziHinamClient", () => {
       expect(f.calls).toHaveLength(0);
     },
   );
+
+  it.each(["foo/../order/post", "./user/cc", "user/./cc/1"])("refuses %s after path normalization", async path => {
+    const f = fakeFetch({});
+    await expect(new HaziHinamClient("t", { fetch: f.fetch }).post(path, {})).rejects.toBeInstanceOf(ForbiddenOperation);
+    expect(f.calls).toHaveLength(0);
+  });
+
+  it.each(["https://evil.example/x", "../../other"])("refuses %s, which would leave the API, without sending the token", async path => {
+    const f = fakeFetch({});
+    await expect(new HaziHinamClient("t", { fetch: f.fetch }).get(path)).rejects.toMatchObject({ code: "BAD_PATH" });
+    await expect(new HaziHinamClient("t", { fetch: f.fetch }).get(path)).rejects.toBeInstanceOf(HaziHinamError);
+    expect(f.calls).toHaveLength(0);
+  });
+
+  it("reports a JSON null body as UpstreamError", async () => {
+    const f = fakeFetch({ "GET user/info": () => ({ status: 200, text: "null" }) });
+    await expect(new HaziHinamClient("t", { fetch: f.fetch }).get("user/info")).rejects.toBeInstanceOf(UpstreamError);
+  });
+
+  it("sends DELETE and returns Results", async () => {
+    const f = fakeFetch({ "DELETE order/draft/3": { Removed: true } });
+    const results = await new HaziHinamClient("t", { fetch: f.fetch }).delete("order/draft/3");
+    expect(results).toEqual({ Removed: true });
+    expect(f.calls[0].method).toBe("DELETE");
+  });
 });
