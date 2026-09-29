@@ -30,7 +30,7 @@ The store's login has a CAPTCHA, so you always sign in yourself. The login lasts
 node dist/bin.js login --browser   # opens Chrome; you log in; the token is captured
 node dist/bin.js login             # or paste access_token from DevTools → Network → Login → Response
 node dist/bin.js status
-node dist/bin.js logout            # forget the saved login
+node dist/bin.js logout            # end the session on the server, then forget the saved login
 ```
 
 ## Commands

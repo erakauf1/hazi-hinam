@@ -67,10 +67,29 @@ describe("cli", () => {
     expect(await store.loadSession(now)).toBeUndefined();
   });
 
-  it("logout removes the session", async () => {
+  it("logout calls the real LogOut endpoint and removes the local session", async () => {
     const store = await tempStore();
     await store.saveSession("tok", 172800, now);
-    expect(await main(["logout"], makeIo().io, createContext({ store, now: () => now }))).toBe(0);
+    const f = fakeFetch({ "GET /proxy/LogOut": {} });
+    expect(await main(["logout"], makeIo().io, createContext({ store, fetch: f.fetch, now: () => now }))).toBe(0);
     expect(await store.loadSession(now)).toBeUndefined();
+    expect(f.calls).toHaveLength(1);
+    expect(f.calls[0].url.pathname).toBe("/proxy/LogOut");
+    expect(f.calls[0].headers.get("authorization")).toBe("Bearer tok");
+  });
+
+  it("logout still clears the local session when the server call fails", async () => {
+    const store = await tempStore();
+    await store.saveSession("tok", 172800, now);
+    const f = fakeFetch({ "GET /proxy/LogOut": () => ({ status: 500, text: "" }) });
+    expect(await main(["logout"], makeIo().io, createContext({ store, fetch: f.fetch, now: () => now }))).toBe(0);
+    expect(await store.loadSession(now)).toBeUndefined();
+  });
+
+  it("logout with no saved session does not call the network and still exits 0", async () => {
+    const store = await tempStore();
+    const f = fakeFetch({});
+    expect(await main(["logout"], makeIo().io, createContext({ store, fetch: f.fetch, now: () => now }))).toBe(0);
+    expect(f.calls).toHaveLength(0);
   });
 });

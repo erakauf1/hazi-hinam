@@ -22,7 +22,7 @@ function helpText(): string {
     "",
     "Session:",
     `  ${"login".padEnd(width)}  Paste the access token from your own browser login (or --browser to capture it)`,
-    `  ${"logout".padEnd(width)}  Forget the saved login`,
+    `  ${"logout".padEnd(width)}  End the session on the server and forget the saved login`,
     `  ${"mcp".padEnd(width)}  Run the MCP server on stdio`,
     "",
     "Commands:",
@@ -81,6 +81,12 @@ export async function main(argv: string[], io: Io, ctx: Context): Promise<number
     }
     if (command === "login") return await login(parseFlags(rest), io, ctx);
     if (command === "logout") {
+      const session = await ctx.store.loadSession(ctx.now());
+      if (session) {
+        // Best effort: the user asked to be signed out, so a dead/expired token or a flaky
+        // server shouldn't leave them stuck logged-in locally.
+        await ctx.clientFor(session.accessToken).logout().catch(() => {});
+      }
       await ctx.store.clearSession();
       io.stdout("Signed out.\n");
       return 0;
