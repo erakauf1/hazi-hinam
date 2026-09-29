@@ -12,8 +12,6 @@ export interface Io {
 }
 
 const LOGIN_LIFETIME_SECONDS = 172800;
-// Computed specifier: ./browser-login.js is added by a later task; drop this once it exists.
-const lazyImport = <T>(specifier: string): Promise<T> => import(specifier);
 const commandName = (operationName: string) => operationName.replaceAll("_", "-");
 
 function helpText(): string {
@@ -59,7 +57,7 @@ export async function verifyAndSaveToken(ctx: Context, token: string): Promise<S
 async function login(flags: Record<string, string | true>, io: Io, ctx: Context): Promise<number> {
   let token: string;
   if (flags.browser) {
-    const { captureTokenFromBrowser } = await lazyImport<{ captureTokenFromBrowser(io: Io): Promise<string> }>("./browser-login.js");
+    const { captureTokenFromBrowser } = await import("./browser-login.js");
     token = await captureTokenFromBrowser(io);
   } else {
     io.stderr(
