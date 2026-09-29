@@ -10,3 +10,6 @@ coverage/
 usual-order.json
 session.json
 *.token
+
+# Local agent workspace
+.superpowers/

@@ -16,7 +16,7 @@
 - API base: `https://shop.hazi-hinam.co.il/proxy/api/`. Every request sends `Authorization: Bearer <token>`, `Accept: application/json`, `User-Agent: Mozilla/5.0`, and `DEVICE_INFO: {"DEVICE_TYPE":4,"UDID":"","MANUFACTURER":"","MODEL":"","VERSION":""}`.
 - **Every POST/PUT body is wrapped as `{"Object": <payload>}`**; an empty payload is `{"Object":{}}`. A bare or empty body gets HTTP 500.
 - Responses are `{ IsOK, Results, ErrorResponse }`; callers only ever see `Results`.
-- **Never call `order/post`** (that call is payment), `user/cc`, or `user/GetIFrameURL`. The client refuses these paths before any network I/O.
+- **Payment is out of scope for this version.** Do not call `order/post` (that call is payment), `user/cc`, or `user/GetIFrameURL`; the client refuses these paths before any network I/O. Payment support may be added later in its own plan, by removing the guard deliberately.
 - **Never solve, bypass, or automate the login CAPTCHA.** The user logs in themselves; the tool only reuses the resulting token (valid 48 h, `expires_in: 172800`).
 - Personal data (token, usual order) lives only in the config dir: `$HAZI_HINAM_CONFIG_DIR`, else `$XDG_CONFIG_HOME/hazi-hinam`, else `~/.config/hazi-hinam`. Dir mode `0700`, files `0600`, written atomically.
 - Never commit real tokens, order IDs, totals, or the usual order. Test fixtures use made-up values.
@@ -576,7 +576,8 @@ const DEVICE_INFO = JSON.stringify({ DEVICE_TYPE: 4, UDID: "", MANUFACTURER: "",
 // Verified live with this exact value; the site sits behind Cloudflare.
 const USER_AGENT = "Mozilla/5.0";
 
-// order/post takes card details and places the order; user/cc and GetIFrameURL are card management.
+// Payment is out of scope for now: order/post takes card details and places the order; user/cc and
+// GetIFrameURL are card management. Lifting this is a deliberate, separately planned change.
 const FORBIDDEN_PATHS = [/^order\/post\b/i, /^user\/cc\b/i, /^user\/GetIFrameURL\b/i];
 
 interface Envelope<T> {
