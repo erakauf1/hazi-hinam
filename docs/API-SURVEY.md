@@ -18,7 +18,7 @@ kept here.
 | Probed live (read-only) | 49 |
 | Built in phase 1 (v1) | 9 |
 | Built in phase 2 (v2) | 26 |
-| Recommended next | 3 |
+| Recommended next | 2 |
 | Later / nice to have | 34 |
 | Excluded | 26 |
 
@@ -26,8 +26,9 @@ kept here.
 account data) · `message` (sends something to the store) · `auth` (login/SMS/registration) · `payment` ·
 `destructive-account`.
 
-**MCP recommendation:** `v1` built in phase 1 · `v2` built in phase 2 · `next` still recommended · `later` if needed · `exclude` never exposed to an
-assistant (credentials, CAPTCHA, SMS, account deletion, payment for now, marketing content).
+**MCP recommendation:** `v1` built in phase 1 · `v2` built in phase 2 · `cli` built, CLI-only (not an MCP tool) ·
+`next` still recommended · `later` if needed · `exclude` never exposed to an assistant (credentials, CAPTCHA, SMS,
+account deletion, payment for now, marketing content).
 
 ## Session
 
@@ -36,7 +37,7 @@ assistant (credentials, CAPTCHA, SMS, account deletion, payment for now, marketi
 | `init` | GET |  | read | later | 200 | AnonymousToken, ClientConfigurations, ServerConfigurations | Site configuration and UI texts; `AnonymousToken` for guest carts. |
 | `Login` | POST | raw | auth | exclude | not probed |  | Password login; needs a reCAPTCHA token. The user logs in themselves. |
 | `LoginExtChannel` | POST | raw | auth | exclude | not probed |  | Login for external channels; also needs a CAPTCHA token. |
-| `LogOut` | GET |  | auth | next | not probed |  | Ends the session on the server. Useful for `hazi-hinam logout`. |
+| `LogOut` | GET |  | auth | cli | not probed | (not inspected; call is best-effort) | Ends the session on the server. Called by `hazi-hinam logout`, CLI-only like `login` (not an MCP tool). |
 | `SUBMITLOGIN` | POST | raw | auth | exclude | not probed |  | Posts a bearer token to a login URL (SSO handoff). |
 
 ## Account
@@ -206,5 +207,6 @@ assistant (credentials, CAPTCHA, SMS, account deletion, payment for now, marketi
 - **`order/checkout`** carries the card-iframe URL and the user's personal details; the MCP should not expose it raw.
 - **Shopping lists can be seeded from an order** (`shoppinglist/post {Name, OrderId}`), but still without quantities.
 - `shoppinglist/getItemLists/{id}` returned 404 and `order/DownloadInvoice/{id}` returned 404 for the ids tried; both need a follow-up.
-- **Deferred from phase 2:** `LogOut` lives under `/proxy/`, outside the client's allowed base path; `Item/GetItemsByCategory` is covered by sub-category browsing (`item/getItemsBySubCategory`); `order/DownloadInvoice/{id}` returned 404 in the survey and is a file download.
+- **Deferred from phase 2:** `Item/GetItemsByCategory` is covered by sub-category browsing (`item/getItemsBySubCategory`); `order/DownloadInvoice/{id}` returned 404 in the survey and is a file download.
+- **`LogOut`** lives under `/proxy/`, outside the client's allowed `/proxy/api/` base path, so `hazi-hinam logout` calls it directly rather than through `HaziHinamClient.request`. It's best-effort: if the server call fails, the local session is cleared anyway so the user isn't stuck logged-in locally.
 - The site's API name has typos that must be kept as-is: `getItemByBarkod`, `SetUserNotificatioRead`, `ItemGroupping`, `ShippmentId` (in `order/post`), `getItemListsExistance`.

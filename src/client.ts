@@ -55,6 +55,26 @@ export class HaziHinamClient {
     return this.request<T>("DELETE", path);
   }
 
+  // LogOut lives under /proxy/, not /proxy/api/, so it bypasses `request`'s allowed-base-path check
+  // (the same reason init and Login are fetched directly elsewhere in this codebase).
+  async logout(): Promise<void> {
+    let response: Response;
+    try {
+      response = await this.fetchFn(`${SITE_ORIGIN}/proxy/LogOut`, {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${this.token}`,
+          DEVICE_INFO,
+          "User-Agent": USER_AGENT,
+        },
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+    } catch (error) {
+      throw new UpstreamError(`GET /proxy/LogOut did not complete: ${(error as Error).message}`);
+    }
+    if (!response.ok) throw new UpstreamError(`GET /proxy/LogOut failed with HTTP ${response.status}`, response.status);
+  }
+
   private async request<T>(method: string, rawPath: string, body?: unknown, query: Record<string, string | number> = {}): Promise<T> {
     const url = new URL(rawPath.replace(/^\/+/, ""), API_BASE);
     if (url.origin !== SITE_ORIGIN || !url.pathname.startsWith("/proxy/api/")) {
