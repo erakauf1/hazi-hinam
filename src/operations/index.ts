@@ -7,6 +7,7 @@ import { getPromotionProductsOp, listCategoriesOp, listCategoryProductsOp, listP
 import { getProductDetailsOp, getProductOp, searchProductsOp, suggestSearchPhrasesOp } from "./catalog.js";
 import type { Operation } from "./define.js";
 import { listDeliverySlotsOp } from "./delivery.js";
+import { listAddressesOp, listBranchesOp, listPickupStoresOp, setDefaultAddressOp } from "./places.js";
 import { copyOrderToCartOp, getOrderItemsOp, listOrdersOp } from "./orders.js";
 import { prepareUsualOrderOp, saveUsualOrderOp, showUsualOrderOp } from "./usual-order.js";
 
@@ -37,6 +38,10 @@ export const operations: Operation[] = [
   setCartItemOp,
   clearCartOp,
   listDeliverySlotsOp,
+  listAddressesOp,
+  setDefaultAddressOp,
+  listPickupStoresOp,
+  listBranchesOp,
   saveUsualOrderOp,
   showUsualOrderOp,
   prepareUsualOrderOp,
