@@ -1,5 +1,6 @@
 import { status } from "./account.js";
 import { clearCartOp, getCartOp, setCartItemOp } from "./cart.js";
+import { getPromotionProductsOp, listCategoriesOp, listCategoryProductsOp, listPromotedProductsOp } from "./browse.js";
 import { getProductDetailsOp, getProductOp, searchProductsOp, suggestSearchPhrasesOp } from "./catalog.js";
 import type { Operation } from "./define.js";
 import { listDeliverySlotsOp } from "./delivery.js";
@@ -15,6 +16,10 @@ export const operations: Operation[] = [
   suggestSearchPhrasesOp,
   getProductOp,
   getProductDetailsOp,
+  listCategoriesOp,
+  listCategoryProductsOp,
+  listPromotedProductsOp,
+  getPromotionProductsOp,
   listOrdersOp,
   getOrderItemsOp,
   copyOrderToCartOp,

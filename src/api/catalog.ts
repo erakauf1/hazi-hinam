@@ -1,5 +1,6 @@
 import type { HaziHinamClient } from "../client.js";
-import type { Item } from "./types.js";
+import { flattenCategories } from "./items.js";
+import type { Category, Item } from "./types.js";
 
 export interface SuggestedCategory {
   SubCategoryId: number;
@@ -50,4 +51,48 @@ export interface ProductDetails {
 
 export function getProductDetails(c: HaziHinamClient, itemId: number): Promise<ProductDetails> {
   return c.get<ProductDetails>(`item/GetItemGS1Details/${itemId}`);
+}
+
+export interface CatalogNode {
+  Id: number;
+  Name: string;
+  SubCategories: { Id: number; Name: string }[] | null;
+}
+
+export interface Catalog {
+  Campaign: CatalogNode | null;
+  Categories: CatalogNode[] | null;
+}
+
+export function getCatalog(c: HaziHinamClient): Promise<Catalog> {
+  return c.get<Catalog>("Catalog/get");
+}
+
+export async function getSubCategoryItems(c: HaziHinamClient, subCategoryId: number): Promise<{ name: string; items: Item[] }> {
+  const { Category } = await c.get<{ Category: { SubCategory: { Name: string; Items: Item[] | null } | null } | null }>(
+    "item/getItemsBySubCategory",
+    { Id: subCategoryId, SortBy: -1, IsDescending: "false" },
+  );
+  return { name: Category?.SubCategory?.Name ?? "", items: Category?.SubCategory?.Items ?? [] };
+}
+
+export async function getPromotedItems(c: HaziHinamClient): Promise<Item[]> {
+  const { PromotedItems } = await c.get<{ PromotedItems: { Items: Item[] | null } | null }>("item/getItemsPromoted", { SortBy: -1 });
+  return PromotedItems?.Items ?? [];
+}
+
+// Not probed live: the site's web app reads Results.MivzaItems without showing its shape, so accept the three
+// shapes the rest of the API uses for item collections.
+function itemsFrom(value: unknown): Item[] {
+  if (Array.isArray(value)) return value as Item[];
+  if (value && typeof value === "object") {
+    const v = value as { Items?: Item[] | null; Categories?: Category[] | null };
+    if (Array.isArray(v.Items)) return v.Items;
+    if (Array.isArray(v.Categories)) return flattenCategories(v.Categories);
+  }
+  return [];
+}
+
+export async function getPromotionItems(c: HaziHinamClient, promotionId: number): Promise<Item[]> {
+  return itemsFrom((await c.get<{ MivzaItems: unknown }>(`item/getItemsInMivza/${promotionId}`)).MivzaItems);
 }
