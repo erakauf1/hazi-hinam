@@ -4,12 +4,13 @@ import type { Context } from "../context.js";
 import { resolveDay } from "../dates.js";
 import { defineOperation } from "./define.js";
 
-export async function slotsForDay(ctx: Context, day: string | undefined) {
+export async function slotsForDates(ctx: Context, dates: string[] | null) {
   const addresses = await listDeliverySlots(await ctx.client());
-  if (!day) return { dates: null, addresses };
-  const dates = resolveDay(day, ctx.now());
-  return { dates, addresses: filterSlotsByDates(addresses, dates) };
+  return dates ? { dates, addresses: filterSlotsByDates(addresses, dates) } : { dates: null, addresses };
 }
+
+export const slotsForDay = (ctx: Context, day: string | undefined) =>
+  slotsForDates(ctx, day ? resolveDay(day, ctx.now()) : null);
 
 export const listDeliverySlotsOp = defineOperation({
   name: "list_delivery_slots",

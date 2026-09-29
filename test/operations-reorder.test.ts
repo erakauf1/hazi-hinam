@@ -71,4 +71,21 @@ describe("usual order operations", () => {
     expect(result.nextStep).toMatch(/shop\.hazi-hinam\.co\.il/);
     expect(calls.some(c => c.path.startsWith("order/post"))).toBe(false);
   });
+  it("prepare_usual_order rejects a bad day before touching the cart", async () => {
+    const { ctx, calls, store } = await signedIn({});
+    await store.writeJson(USUAL_ORDER_FILE, { savedAt: "x", items: [{ itemId: 1, barcode: "b", name: "Milk", quantity: 2, type: 1 }] });
+    await expect(run("prepare_usual_order", ctx, { day: "someday" })).rejects.toMatchObject({ code: "BAD_DATE" });
+    expect(calls).toEqual([]);
+  });
+
+  it("prepare_usual_order without a day returns no delivery", async () => {
+    const { ctx, store } = await signedIn({
+      "DELETE item/removeItemsInCart": null,
+      "POST item/addItemToCart": null,
+      "GET item/getItemsInCart": { CartItems: { Categories: [{ Id: 1, Name: "c", Items: [item(1, { Cart: { Quantity: 2, ItemQuantityType: 1 } })] }] } },
+      "GET order/cartSummary": { CartSummary: summary },
+    });
+    await store.writeJson(USUAL_ORDER_FILE, { savedAt: "x", items: [{ itemId: 1, barcode: "b", name: "Milk", quantity: 2, type: 1 }] });
+    expect(((await run("prepare_usual_order", ctx)) as any).delivery).toBeNull();
+  });
 });

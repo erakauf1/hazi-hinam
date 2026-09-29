@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { SITE_ORIGIN } from "../client.js";
+import { resolveDay } from "../dates.js";
 import { loadUsualOrder, replayUsualOrder, snapshotCart } from "../usual-order.js";
 import { describeTotal } from "./cart.js";
 import { defineOperation, unitName } from "./define.js";
-import { slotsForDay } from "./delivery.js";
+import { slotsForDates } from "./delivery.js";
 
 export const saveUsualOrderOp = defineOperation({
   name: "save_usual_order",
@@ -37,8 +38,9 @@ export const prepareUsualOrderOp = defineOperation({
   readOnly: false,
   destructive: true,
   async run(ctx, { day }) {
+    const dates = day ? resolveDay(day, ctx.now()) : null;
     const report = await replayUsualOrder(await ctx.client(), ctx.store);
-    const delivery = day ? await slotsForDay(ctx, day) : null;
+    const delivery = dates ? await slotsForDates(ctx, dates) : null;
     return {
       cart: {
         itemsAdded: report.added.length,
