@@ -41,4 +41,11 @@ describe("mcp server", () => {
     expect(result.isError).toBe(true);
     expect((result.content as any)[0].text).toMatch(/AUTH_REQUIRED/);
   });
+
+  it("describes the shopping tools in its instructions", async () => {
+    const client = await connect(createContext({ store: await tempStore(), now: () => now }));
+    const instructions = client.getInstructions() ?? "";
+    expect(instructions).toMatch(/search_products/);
+    expect(instructions).toMatch(/cannot place or pay/i);
+  });
 });
