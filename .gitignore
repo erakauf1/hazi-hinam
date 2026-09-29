@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+*.log
+.DS_Store
+
+# Personal data never belongs in this repo; it lives in ~/.config/hazi-hinam/
+usual-order.json
+session.json
+*.token
