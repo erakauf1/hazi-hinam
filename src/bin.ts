@@ -17,5 +17,5 @@ const io = {
 };
 
 const code = await main(process.argv.slice(2), io, createContext());
-// `mcp` keeps running on stdio; every other command exits with its status.
-if (process.argv[2] !== "mcp") process.exitCode = code;
+// The MCP servers keep the process alive on their own; setting the exit code doesn't end it.
+process.exitCode = code;

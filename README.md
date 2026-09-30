@@ -79,7 +79,8 @@ CLI commands are kebab-case; the matching MCP tools are snake_case. Flags are na
 
 List-valued flags are comma-separated (`--optionIds 5,6`, `--approve 3,7`).
 
-`node dist/bin.js help` prints the same list with descriptions. `login`, `logout` and `mcp` are CLI-only.
+`node dist/bin.js help` prints the same list with descriptions. `login`, `logout` and `mcp` (including
+`mcp --http`) are CLI-only.
 
 ```sh
 node dist/bin.js save-usual-order                 # after filling the cart on the site once
@@ -94,9 +95,36 @@ claude mcp add hazi-hinam -- node /absolute/path/to/hazi-hinam/dist/bin.js mcp
 
 Then ask: "Prepare my usual Hazi Hinam order for Thursday."
 
+## Use it from your phone
+
+The Claude mobile app can't run programs on your phone, so the server runs on your computer and the app reaches it
+over the internet. Nothing is hosted by this project: your login and cart stay between your computer and the store.
+
+1. Sign in on your computer: `node dist/bin.js login --browser`.
+2. Install Cloudflare's free `cloudflared` tool (macOS: `brew install cloudflared`), then start the server:
+
+   ```sh
+   node dist/bin.js mcp --http --tunnel
+   ```
+
+   It prints a connector URL like `https://<random>.trycloudflare.com/mcp/<secret>`.
+3. On [claude.ai](https://claude.ai), open Settings → Connectors → Add custom connector and paste that URL.
+4. Open the Claude app on your phone and ask: "Prepare my usual Hazi Hinam order for Thursday."
+
+Good to know:
+
+- **The URL is the password.** Anyone who has it can read and change your cart and orders (but not pay). Don't share
+  it. `--new-secret` makes a new one and the old one stops working.
+- **Your computer must stay on and awake**, with the terminal open. Ctrl+C stops the server and the tunnel.
+- **The `--tunnel` address changes every restart**, so edit the connector's URL after restarting. For a fixed address,
+  leave out `--tunnel` and expose port 8765 yourself, for example with `tailscale funnel 8765`, then add
+  `/mcp/<secret>` (printed at startup) to that address.
+- **The store login lasts 48 hours.** When it expires, Claude will ask you to run `login` again on your computer.
+- Custom connectors need a Claude plan that includes them.
+
 ## Your data
 
-The login token and your usual order live in `~/.config/hazi-hinam/` (owner-only permissions), never in this
+The login token, your usual order and the phone connector's secret live in `~/.config/hazi-hinam/` (owner-only permissions), never in this
 repository. Override with `HAZI_HINAM_CONFIG_DIR`.
 
 ## Development

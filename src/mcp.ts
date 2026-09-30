@@ -15,7 +15,7 @@ const INSTRUCTIONS = [
   "Placed orders: list_orders shows which can still change their slot (change_order_delivery_slot); get_substitutions/answer_substitutions handle the store's replacement proposals.",
   "Confirm with the user before any tool that changes the cart, an order, favorites, lists or the default address.",
   "You cannot place or pay for orders, or change the products of a placed order. The user finishes on the website.",
-  "If a tool returns AUTH_REQUIRED, ask the user to run `hazi-hinam login` in a terminal.",
+  "If a tool returns AUTH_REQUIRED, ask the user to run `hazi-hinam login` in a terminal on the computer running this server (it can't be done from a phone).",
   "If NO_USUAL_ORDER, ask the user to fill the cart on the website with their usual amounts, then call save_usual_order.",
 ].join(" ");
 
