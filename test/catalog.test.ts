@@ -27,6 +27,11 @@ describe("describeItem", () => {
   it("drops empty extras and defaults units to 'unit'", () => {
     expect(describeItem(item(6))).toEqual({ itemId: 6, barcode: "72900000006", name: "Item 6", price: 10, inStock: true, units: ["unit"] });
   });
+
+  it("drops the placeholder promotion the site sends for featured products without a deal", () => {
+    const featured = item(7, { Mivza: { MivzaId: 0, MivzaDesc: "", MivzaText: null } as unknown as typeof milk.Mivza });
+    expect(describeItem(featured).promotion).toBeUndefined();
+  });
 });
 
 describe("search_products", () => {

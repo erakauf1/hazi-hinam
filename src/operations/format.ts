@@ -16,7 +16,7 @@ export function describeItem(i: Item) {
     pricePerUnit: text(i.PricePerUnitDesc),
     inStock: i.IsInStock,
     units: units.length ? units : ["unit"],
-    promotion: i.Mivza ? { promotionId: i.Mivza.MivzaId, text: i.Mivza.MivzaDesc } : undefined,
+    promotion: i.Mivza?.MivzaId ? { promotionId: i.Mivza.MivzaId, text: i.Mivza.MivzaDesc } : undefined,
     inCart: i.Cart && i.Cart.Quantity > 0 ? { quantity: i.Cart.Quantity, unit: unitName(i.Cart.ItemQuantityType) } : undefined,
     favorite: i.IsFavorites ? true : undefined,
   };

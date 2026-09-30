@@ -210,3 +210,12 @@ account deletion, payment for now, marketing content).
 - **Deferred from phase 2:** `Item/GetItemsByCategory` is covered by sub-category browsing (`item/getItemsBySubCategory`); `order/DownloadInvoice/{id}` returned 404 in the survey and is a file download.
 - **`LogOut`** lives under `/proxy/`, outside the client's allowed `/proxy/api/` base path, so `hazi-hinam logout` calls it directly rather than through `HaziHinamClient.request`. It's best-effort: if the server call fails, the local session is cleared anyway so the user isn't stuck logged-in locally.
 - The site's API name has typos that must be kept as-is: `getItemByBarkod`, `SetUserNotificatioRead`, `ItemGroupping`, `ShippmentId` (in `order/post`), `getItemListsExistance`.
+
+## Live smoke check (2026-09-30, read-only)
+
+All phase-2 read operations ran against the live site: search, suggestions, product by id and barcode, product details, remark options, categories and sub-category products, promoted and promotion products, favorites, shopping lists, addresses, pickup stores, branches, orders and order items.
+
+- **Unknown product:** `item/{id}` returns `IsOK:true` with `{Item: null}`, which `get_product` reports as `NOT_FOUND`.
+- **`item/getItemsInMivza/{id}`:** `MivzaItems` is an object, `{Id, Name, ItemsCount, Items[]}`.
+- **Placeholder promotions:** about half of `getItemsPromoted` are featured products with a placeholder `Mivza` whose `MivzaId` is 0. The site rejects `getItemsInMivza/0`, so `describeItem` omits the promotion when the id is 0.
+- **`SSCS/GetOrderSuggestedAlternativeItems/{id}`:** the site's page reads the id from the SMS link's route (`params.id`). A plain order id is rejected as invalid, so `get_substitutions` needs the id from the SMS link. A valid id with nothing pending returns `Results: null`. The write side (`SetOrderAlternativeItems`) and `ChangeDraftOrderShipping` were not exercised, because the check was read-only.
