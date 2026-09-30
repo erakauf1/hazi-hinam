@@ -77,7 +77,7 @@ const substitutionId = z.string().regex(/^[\w-]{1,64}$/);
 
 export const getSubstitutionsOp = defineOperation({
   name: "get_substitutions",
-  description: "Show the substitutes the store proposes for missing products in an order (the id from the store's substitution SMS link, usually the order id).",
+  description: "Show the substitutes the store proposes for missing products in an order (orderId is the id at the end of the store's substitution SMS link, not the order number shown in list_orders).",
   input: { orderId: substitutionId },
   readOnly: true,
   async run(ctx, { orderId }) {
