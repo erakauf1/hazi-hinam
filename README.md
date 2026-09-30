@@ -107,18 +107,21 @@ over the internet. Nothing is hosted by this project: your login and cart stay b
    node dist/bin.js mcp --http --tunnel
    ```
 
-   It prints a connector URL like `https://<random>.trycloudflare.com/mcp/<secret>`.
-3. On [claude.ai](https://claude.ai), open Settings → Connectors → Add custom connector and paste that URL.
+   It prints a URL like `https://<random>.trycloudflare.com/mcp` and a secret.
+3. On [claude.ai](https://claude.ai), open Settings → Connectors → Add custom connector. Paste the URL, choose
+   **No sign-in**, and under Request headers add `Authorization` with the value `Bearer <secret>`, both as printed.
 4. Open the Claude app on your phone and ask: "Prepare my usual Hazi Hinam order for Thursday."
 
 Good to know:
 
-- **The URL is the password.** Anyone who has it can read and change your cart and orders (but not pay). Don't share
+- **The secret is the password.** Anyone who has it can read and change your cart and orders (but not pay). Don't share
   it. `--new-secret` makes a new one and the old one stops working.
+- If a client can't send headers, the server also prints a URL with the secret inside it
+  (`.../mcp/<secret>`). It works the same, but a URL is easier to leak by accident, so prefer the header.
 - **Your computer must stay on and awake**, with the terminal open. Ctrl+C stops the server and the tunnel.
 - **The `--tunnel` address changes every restart**, so edit the connector's URL after restarting. For a fixed address,
-  leave out `--tunnel` and expose port 8765 yourself, for example with `tailscale funnel 8765`, then add
-  `/mcp/<secret>` (printed at startup) to that address.
+  leave out `--tunnel` and expose port 8765 yourself, for example with `tailscale funnel 8765`, then use that
+  address + `/mcp` with the same header.
 - **The store login lasts 48 hours.** When it expires, Claude will ask you to run `login` again on your computer.
 - Custom connectors need a Claude plan that includes them.
 

@@ -97,24 +97,31 @@ async function serveHttp(flags: Record<string, string | true>, io: Io, ctx: Cont
   }
 
   const signedIn = (await ctx.store.loadSession(ctx.now())) !== undefined;
-  const lines = [`MCP server running on this computer at ${localUrl}${server.path}`, ""];
+  const { ENDPOINT } = await import("./http-server.js");
+  const lines = [`MCP server running on this computer at ${localUrl}${ENDPOINT}`, ""];
   if (tunnel) {
     lines.push(
-      "Connector URL for claude.ai and the Claude mobile app:",
+      "Add it once in claude.ai → Settings → Connectors → Add custom connector, with No sign-in:",
+      `  URL:             ${tunnel.url}${ENDPOINT}`,
+      "  Request header:  Authorization",
+      `  Value:           Bearer ${secret}`,
+      "",
+      "If a client only takes a URL, use this instead (the secret is inside it):",
       `  ${tunnel.url}${server.path}`,
       "",
-      "Add it once in claude.ai → Settings → Connectors → Add custom connector. It then works in the Claude app on your phone.",
-      "This address changes every time you restart with --tunnel, so update the connector after a restart.",
+      "It then works in the Claude app on your phone.",
+      "The address changes every time you restart with --tunnel, so update the connector's URL after a restart.",
     );
   } else {
     lines.push(
       "To use it from your phone, it needs a public https address. Run again with --tunnel,",
-      `or point your own tunnel at port ${server.port} (for example \`tailscale funnel ${server.port}\`) and add ${server.path} to its address.`,
+      `or point your own tunnel at port ${server.port} (for example \`tailscale funnel ${server.port}\`) and use its address + ${ENDPOINT}`,
+      `with the header \`Authorization: Bearer ${secret}\`.`,
     );
   }
   lines.push(
     "",
-    "Keep the URL private: anyone who has it can read and change your cart (not pay). `--new-secret` replaces it.",
+    "Keep the secret private: anyone who has it can read and change your cart (not pay). `--new-secret` replaces it.",
     "Keep this terminal open and the computer awake. Ctrl+C stops the server.",
   );
   if (!signedIn) lines.push("", "Not signed in yet: run `hazi-hinam login` in another terminal before using the tools.");

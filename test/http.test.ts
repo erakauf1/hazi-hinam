@@ -20,11 +20,14 @@ async function start(ctx: ReturnType<typeof createContext>, secret = "s3cret-val
   return `http://127.0.0.1:${server.port}`;
 }
 
-async function connect(url: string) {
+async function connect(url: string, headers?: Record<string, string>) {
   const client = new Client({ name: "test", version: "0" });
-  await client.connect(new StreamableHTTPClientTransport(new URL(url)));
+  await client.connect(new StreamableHTTPClientTransport(new URL(url), { requestInit: { headers } }));
   return client;
 }
+
+const post = (url: string, headers: Record<string, string> = {}) =>
+  fetch(url, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: "{}" });
 
 describe("http mcp server", () => {
   it("serves every tool at the secret path and runs them", async () => {
@@ -36,6 +39,27 @@ describe("http mcp server", () => {
     const result = await client.callTool({ name: "list_orders", arguments: { limit: 3 } });
     expect(JSON.parse((result.content as any)[0].text)).toEqual([]);
     await client.close();
+  });
+
+  it("accepts the secret as a bearer header at /mcp", async () => {
+    const { ctx } = await signedIn({ "GET order/history": { Orders: [] } });
+    const base = await start(ctx);
+    const client = await connect(`${base}/mcp`, { Authorization: "Bearer s3cret-value" });
+    const result = await client.callTool({ name: "list_orders", arguments: { limit: 3 } });
+    expect(JSON.parse((result.content as any)[0].text)).toEqual([]);
+    await client.close();
+  });
+
+  it("answers 404 at /mcp for a missing, wrong or malformed header", async () => {
+    const { ctx } = await signedIn({});
+    const base = await start(ctx);
+    for (const authorization of [undefined, "Bearer wrong", "Bearer s3cret-valu", "s3cret-value", "Basic s3cret-value", "Bearer s3cret-value extra"]) {
+      const res = await post(`${base}/mcp`, authorization === undefined ? {} : { Authorization: authorization });
+      expect(res.status, String(authorization)).toBe(404);
+    }
+    // The header only unlocks /mcp itself, never another path.
+    expect((await post(`${base}/other`, { Authorization: "Bearer s3cret-value" })).status).toBe(404);
+    await expect(connect(`${base}/mcp`, { Authorization: "Bearer wrong" })).rejects.toThrow();
   });
 
   it("handles several clients one after another", async () => {
@@ -52,8 +76,7 @@ describe("http mcp server", () => {
     const { ctx } = await signedIn({});
     const base = await start(ctx);
     for (const path of ["/mcp/wrong", "/mcp/s3cret-valu", "/mcp/s3cret-value/extra", "/mcp", "/mcp/", "/", "/s3cret-value"]) {
-      const res = await fetch(`${base}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-      expect(res.status, path).toBe(404);
+      expect((await post(`${base}${path}`)).status, path).toBe(404);
     }
     await expect(connect(`${base}/mcp/wrong`)).rejects.toThrow();
   });

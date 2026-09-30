@@ -14,7 +14,10 @@ interface ConnectorConfig {
   secret: string;
 }
 
-// claude.ai connectors can't send custom headers, so the secret travels in the URL path and acts as the password.
+export const ENDPOINT = "/mcp";
+
+// The secret is the password: sent as `Authorization: Bearer <secret>` to /mcp, or as /mcp/<secret> for
+// clients that can only be given a URL.
 export async function connectorSecret(store: Store, options: { rotate?: boolean } = {}): Promise<string> {
   const saved = await store.readJson<ConnectorConfig>(CONNECTOR_FILE);
   if (saved?.secret && !options.rotate) return saved.secret;
@@ -27,6 +30,12 @@ const digest = (value: string) => createHash("sha256").update(value).digest();
 
 function secretMatches(candidate: string, secret: string): boolean {
   return timingSafeEqual(digest(candidate), digest(secret));
+}
+
+function presentedSecret(req: IncomingMessage): string | undefined {
+  const path = new URL(req.url ?? "/", "http://localhost").pathname;
+  if (path === ENDPOINT) return /^Bearer +(\S+)$/i.exec(req.headers.authorization ?? "")?.[1];
+  return new RegExp(`^${ENDPOINT}/([^/]+)$`).exec(path)?.[1];
 }
 
 function reply(res: ServerResponse, status: number, message: string): void {
@@ -43,15 +52,12 @@ export async function startHttpServer(
   ctx: Context,
   options: { secret: string; port?: number; host?: string },
 ): Promise<HttpServerHandle> {
-  const path = `/mcp/${options.secret}`;
+  const path = `${ENDPOINT}/${options.secret}`;
 
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
-    const requestPath = new URL(req.url ?? "/", "http://localhost").pathname;
-    const [, prefix, candidate, ...extra] = requestPath.split("/");
-    // Every miss looks the same, so a scanner learns nothing about whether the server exists.
-    if (prefix !== "mcp" || !candidate || extra.length > 0 || !secretMatches(candidate, options.secret)) {
-      return reply(res, 404, "Not found");
-    }
+    const candidate = presentedSecret(req);
+    // Every miss is a 404, never a 401, so a scanner learns nothing about whether the server exists.
+    if (!candidate || !secretMatches(candidate, options.secret)) return reply(res, 404, "Not found");
     if (req.method !== "POST") return reply(res, 405, "Method not allowed");
 
     // Stateless: a fresh server and transport per request, so nothing is shared between callers.
