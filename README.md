@@ -103,3 +103,16 @@ repository. Override with `HAZI_HINAM_CONFIG_DIR`.
 
 `npm test`, `npm run typecheck`. Adding a command: [docs/ADDING-COMMANDS.md](docs/ADDING-COMMANDS.md).
 API research: [docs/API.md](docs/API.md).
+
+## Disclaimer
+
+This project was made for personal research and educational purposes only. It is not affiliated with, endorsed
+by, or supported by Hazi Hinam. It uses the store's undocumented API, which can change or break at any time.
+
+You use it entirely at your own risk and are solely responsible for how you use it, including following Hazi
+Hinam's terms of service and applicable law. The author accepts no responsibility or liability for any use or
+misuse of this software, or for any resulting orders, charges, account restrictions, data loss or other damage.
+
+## License
+
+[MIT](LICENSE). The software is provided "as is", without warranty of any kind.
